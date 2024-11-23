@@ -1,0 +1,45 @@
+name: Kaggle to GitHub
+
+# Workflow ne zaman çalışacak? Burada push işlemi tetiklenmiş.
+on:
+  push:
+    branches:
+      - main   # 'main' branch'ına her push işlemi tetikleyince çalışacak.
+
+jobs:
+  download_and_upload:
+    runs-on: ubuntu-latest  # Ubuntu tabanlı bir sanal makine üzerinde çalışacak.
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Repo'yu klonluyor.
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Python 3.x sürümü kuruyor.
+
+      - name: Install Kaggle API
+        run: |
+          pip install kaggle  # Kaggle API'yi yüklüyor.
+
+      - name: Download Dataset from Kaggle
+        run: |
+          # Kaggle API için gerekli olan API anahtarını kullanarak veriyi indiriyoruz.
+          mkdir ~/.kaggle
+          echo "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
+          kaggle datasets download -d <dataset-owner>/<dataset-name>  # Veriyi indiriyoruz.
+
+      - name: Unzip downloaded dataset
+        run: |
+          unzip -o <dataset-name>.zip  # İndirilen veriyi açıyoruz.
+
+      - name: Add and Commit to GitHub
+        run: |
+          git config --global user.name "Your Name"
+          git config --global user.email "your-email@example.com"
+          git add .  # Değişiklikleri ekliyoruz.
+          git commit -m "Add new Kaggle dataset"  # Commit mesajı.
+          git push origin main  # Değişiklikleri 'main' branch'ına gönderiyoruz.
+        env:
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}  # Kaggle API anahtarını GitHub Secrets'tan alıyoruz.
